@@ -9,7 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <!-- EmailJS Kütüphanesi -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
     <style>
@@ -228,6 +227,44 @@
 </head>
 <body>
 
+    <!-- Onay Modalı -->
+    <div id="confirmModal" class="fixed inset-0 z-[11000] hidden items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+        <div class="bg-white rounded-[32px] p-10 max-sm w-full shadow-2xl text-center space-y-6 animate-in zoom-in duration-300">
+            <div class="w-20 h-20 bg-red-50 rounded-full mx-auto flex items-center justify-center text-red-600">
+                <i data-lucide="trash-2" class="w-10 h-10"></i>
+            </div>
+            <div>
+                <h3 id="confirmTitle" class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Emin misiniz?</h3>
+                <p id="confirmText" class="text-slate-500 text-sm mt-2 font-medium leading-relaxed"></p>
+            </div>
+            <div class="flex gap-3">
+                <button id="confirmYesBtn" class="flex-grow py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg hover:bg-red-700 transition-all uppercase text-xs">Evet, Sil</button>
+                <button id="confirmNoBtn" class="flex-grow py-4 bg-slate-100 text-slate-400 rounded-2xl font-black hover:bg-slate-200 transition-all uppercase text-xs">Vazgeç</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yeni Proje Modalı -->
+    <div id="newProjectModal" class="fixed inset-0 z-[11000] hidden items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+        <div class="bg-white rounded-[32px] p-10 max-sm w-full shadow-2xl text-center space-y-6 animate-in zoom-in duration-300">
+            <div class="w-20 h-20 bg-blue-50 rounded-full mx-auto flex items-center justify-center text-[#000080]">
+                <i data-lucide="folder-plus" class="w-10 h-10"></i>
+            </div>
+            <div>
+                <h3 class="text-2xl font-black text-slate-900 uppercase">Yeni Proje</h3>
+            </div>
+            <div class="space-y-3">
+                <input type="text" id="newProjectNameInput" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold uppercase text-center" placeholder="PROJE ADI">
+                <input type="text" id="newProjectUserInput" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-center" placeholder="KULLANICI ADI">
+                <input type="password" id="newProjectPassInput" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-center" placeholder="ŞİFRE">
+            </div>
+            <div class="flex gap-3">
+                <button id="saveNewProjectBtn" class="flex-grow py-4 bg-[#000080] text-white rounded-2xl font-black shadow-lg hover:bg-blue-900 transition-all uppercase text-xs">Kaydet</button>
+                <button onclick="get('newProjectModal').classList.add('hidden'); get('newProjectModal').classList.remove('flex');" class="flex-grow py-4 bg-slate-100 text-slate-400 rounded-2xl font-black hover:bg-slate-200 transition-all uppercase text-xs">Vazgeç</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Mesaj Kutusu -->
     <div id="msgBox" class="fixed inset-0 z-[10000] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center animate-in zoom-in duration-200">
@@ -236,7 +273,7 @@
             </div>
             <h4 id="msgTitle" class="font-black text-slate-900 text-xl mb-2">Bilgi</h4>
             <p id="msgText" class="text-sm text-slate-500 mb-8 leading-relaxed"></p>
-            <button onclick="get('msgBox').classList.add('hidden')" class="w-full py-4 bg-[#000080] text-white rounded-2xl font-bold shadow-lg hover:bg-blue-900 transition-colors">Tamam</button>
+            <button onclick="get('msgBox').classList.add('hidden'); get('msgBox').classList.remove('flex');" class="w-full py-4 bg-[#000080] text-white rounded-2xl font-bold shadow-lg hover:bg-blue-900 transition-colors">Tamam</button>
         </div>
     </div>
 
@@ -312,8 +349,8 @@
             </div>
             <form id="loginForm" class="space-y-6">
                 <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kullanıcı Adı / Proje Kodu</label>
-                    <input type="text" id="usernameInput" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mt-2 font-bold" placeholder="ELDOR">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kullanıcı Adı</label>
+                    <input type="text" id="usernameInput" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 mt-2 font-bold" placeholder="Kullanıcı Adı">
                 </div>
                 <div>
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Şifre</label>
@@ -360,33 +397,12 @@
 
             <div class="flex gap-3">
                 <button id="sendEmailBtn" class="flex-grow py-5 bg-[#000080] text-white rounded-2xl font-black shadow-xl hover:bg-blue-900 transition-all uppercase tracking-tight">Bilgileri Gönder</button>
-                <button onclick="get('emailAuthModal').classList.add('hidden')" class="px-6 py-5 bg-slate-100 text-slate-400 rounded-2xl font-black hover:bg-slate-200 transition-colors uppercase text-xs">Vazgeç</button>
+                <button onclick="get('emailAuthModal').classList.add('hidden'); get('emailAuthModal').classList.remove('flex');" class="px-6 py-5 bg-slate-100 text-slate-400 rounded-2xl font-black hover:bg-slate-200 transition-colors uppercase text-xs">Vazgeç</button>
             </div>
         </div>
     </div>
 
-    <!-- Rest of the app (Operator View, Admin, etc.) -->
-    <div id="operatorView" class="flex flex-col">
-        <header class="bg-[#000080] text-white p-6 sticky top-0 z-50 flex items-center justify-between shadow-xl">
-            <div class="flex items-center gap-4">
-                <div id="opLogoContainer" class="w-12 h-12 bg-white rounded-xl p-2 flex items-center justify-center shadow-inner"></div>
-                <div>
-                    <h1 id="opSopTitle" class="font-black text-lg leading-none uppercase tracking-tight">SOP BAŞLIĞI</h1>
-                    <p id="opSopSubtitle" class="text-[11px] opacity-60 font-bold uppercase tracking-widest mt-1">PROJE KODU</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="px-4 py-2 bg-white/10 border border-white/20 rounded-full text-[10px] font-black uppercase tracking-widest">Operatör Görünümü</span>
-                <button onclick="exitOperatorView()" class="bg-red-500/20 hover:bg-red-500/40 p-3 rounded-xl transition-colors text-white"><i data-lucide="log-out" class="w-5 h-5"></i></button>
-            </div>
-        </header>
-        <main class="p-6 space-y-8 max-w-4xl mx-auto w-full">
-            <div id="opWarningsArea" class="hidden bg-red-50 border-l-8 border-red-600 p-6 rounded-2xl shadow-sm"></div>
-            <div id="opMedia" class="space-y-6"></div>
-            <div id="opStepsList" class="space-y-4 pb-12"></div>
-        </main>
-    </div>
-
+    <!-- Main Admin App Container -->
     <div class="app-container hidden opacity-0 transition-opacity duration-700" id="mainApp">
         <aside id="sidebar" class="sidebar shadow-2xl">
             <div class="p-8 border-b flex flex-col gap-6 bg-slate-50/50">
@@ -412,6 +428,7 @@
                 <button id="startNewSopBtn" class="hidden px-10 py-5 bg-[#000080] text-white rounded-2xl font-black shadow-2xl hover:scale-105 transition-all uppercase text-xs tracking-widest">YENİ TALİMAT EKLE</button>
             </div>
 
+            <!-- GÜNCEL EDİTÖR ÜST KISIM (Orijinal Tasarıma Dönüldü) -->
             <div id="sopEditor" class="hidden max-w-6xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500">
                 <div class="flex flex-col lg:flex-row items-center gap-8 bg-white p-8 rounded-[32px] shadow-sm border border-slate-200">
                     <div id="logoUploadBox" class="w-24 h-24 shrink-0 border-2 border-dashed border-slate-200 rounded-[20px] flex items-center justify-center cursor-pointer bg-slate-50 relative hover:bg-slate-100 transition-colors group">
@@ -479,6 +496,28 @@
         </main>
     </div>
 
+    <!-- Operator View Screen -->
+    <div id="operatorView" class="flex flex-col">
+        <header class="bg-[#000080] text-white p-6 sticky top-0 z-50 flex items-center justify-between shadow-xl">
+            <div class="flex items-center gap-4">
+                <div id="opLogoContainer" class="w-12 h-12 bg-white rounded-xl p-2 flex items-center justify-center shadow-inner"></div>
+                <div>
+                    <h1 id="opSopTitle" class="font-black text-lg leading-none uppercase tracking-tight">SOP BAŞLIĞI</h1>
+                    <p id="opSopSubtitle" class="text-[11px] opacity-60 font-bold uppercase tracking-widest mt-1">PROJE KODU</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="px-4 py-2 bg-white/10 border border-white/20 rounded-full text-[10px] font-black uppercase tracking-widest">Operatör Görünümü</span>
+                <button onclick="exitOperatorView()" class="bg-red-500/20 hover:bg-red-500/40 p-3 rounded-xl transition-colors text-white"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+            </div>
+        </header>
+        <main class="p-6 space-y-8 max-w-4xl mx-auto w-full">
+            <div id="opWarningsArea" class="hidden bg-red-50 border-l-8 border-red-600 p-6 rounded-2xl shadow-sm"></div>
+            <div id="opMedia" class="space-y-6"></div>
+            <div id="opStepsList" class="space-y-4 pb-12"></div>
+        </main>
+    </div>
+
     <div id="loading" class="loading-overlay">
         <div class="w-16 h-16 border-4 border-[#000080] border-t-transparent rounded-full animate-spin mb-6"></div>
         <p class="font-black text-[#000080] text-lg uppercase tracking-tighter" id="loadingText">Yükleniyor...</p>
@@ -490,7 +529,7 @@
             <h3 class="text-lg font-bold mb-4" id="qrModalTitle">SOP Bilgisi</h3>
             <div id="qrcode" class="bg-white p-2 rounded-2xl border border-slate-100 inline-block mb-4"></div>
             <p class="text-slate-400 text-xs mb-4 uppercase font-bold tracking-widest">Erişim Seçenekleri QR</p>
-            <button onclick="get('qrModal').classList.add('hidden')" class="w-full py-3 bg-slate-200 text-slate-700 rounded-xl font-bold uppercase text-xs">Kapat</button>
+            <button onclick="get('qrModal').classList.add('hidden'); get('qrModal').classList.remove('flex');" class="w-full py-3 bg-slate-200 text-slate-700 rounded-xl font-bold uppercase text-xs">Kapat</button>
         </div>
     </div>
 
@@ -502,7 +541,7 @@
         const CONFIG_PATH = 'public/config/project_auth.json';
         const ADMIN_USER = "eldor", ADMIN_PASS = "eldor123";
 
-        // EMAILJS CONFIG (TAMAMLANDI)
+        // EMAILJS CONFIG
         const EMAILJS_SERVICE_ID = "service_mmf71yb"; 
         const EMAILJS_TEMPLATE_ID = "template_uxmdzuy"; 
         const EMAILJS_PUBLIC_KEY = "4XqKGggT6gfIKx4GK"; 
@@ -510,7 +549,7 @@
         window.get = id => document.getElementById(id);
         let supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = { role: 'guest', project: null };
-        let dynamicAuth = {};
+        let dynamicAuth = {}; 
         let activeProject = null, activeIdx = 0, images = [null, null], points = [], arrows = [], warnings = [], currentMode = 'red', lastColor = 'red', tempArrowStart = null, ctx = null;
         let pendingPath = null; 
         let loginPurpose = 'system'; 
@@ -522,9 +561,7 @@
             attachListeners();
             lucide.createIcons();
             
-            try {
-                emailjs.init(EMAILJS_PUBLIC_KEY);
-            } catch(e) {}
+            try { emailjs.init(EMAILJS_PUBLIC_KEY); } catch(e) {}
 
             const params = new URLSearchParams(window.location.search);
             const viewParam = params.get('view'); 
@@ -549,6 +586,13 @@
             } catch (e) { dynamicAuth = {}; }
         }
 
+        async function saveDynamicAuthToSupabase() {
+            try {
+                const blob = new Blob([JSON.stringify(dynamicAuth)], { type: 'application/json' });
+                await supabaseClient.storage.from(BUCKET_NAME).upload(CONFIG_PATH, blob, { upsert: true });
+            } catch (e) { console.error(e); }
+        }
+
         function showMessage(title, text, type = 'error') {
             get('msgTitle').innerText = title;
             get('msgText').innerText = text;
@@ -568,109 +612,134 @@
             lucide.createIcons();
         }
 
+        function showConfirm(title, text, onConfirm) {
+            get('confirmTitle').innerText = title;
+            get('confirmText').innerText = text;
+            const modal = get('confirmModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            get('confirmYesBtn').onclick = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); onConfirm(); };
+            get('confirmNoBtn').onclick = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); };
+            lucide.createIcons();
+        }
+
         function showCredentials(projName) {
             const upProj = projName.toUpperCase();
-            const pass = dynamicAuth[upProj];
-            if (pass) {
-                showMessage(`${projName} Giriş Bilgileri`, `Kullanıcı Adı: ${upProj}\nŞifre: ${pass}`, 'info');
-            } else {
-                showMessage("Hata", "Bu proje için giriş bilgisi bulunamadı.", 'error');
+            const creds = dynamicAuth[upProj];
+            if (creds) showMessage(`${projName} Bilgileri`, `Kullanıcı: ${creds.user}\nŞifre: ${creds.pass}`, 'info');
+            else showMessage("Hata", "Bilgi bulunamadı.", 'error');
+        }
+
+        function showQr(path, title) { 
+            if (!path || path.startsWith('blob:')) return;
+            let currentAddr = window.location.href.split('?')[0];
+            const gatewayUrl = currentAddr.replace(/\/$/, '') + "?view=" + encodeURIComponent(path);
+            const qrBox = get('qrcode'); 
+            if (qrBox) {
+                qrBox.innerHTML = ''; 
+                try {
+                    new QRCode(qrBox, { text: gatewayUrl, width: 220, height: 220, colorDark: "#000080", correctLevel: QRCode.CorrectLevel.M }); 
+                    get('qrModalTitle').innerText = title; 
+                    get('qrModal').classList.remove('hidden');
+                    get('qrModal').classList.add('flex');
+                } catch (err) { console.error(err); }
             }
         }
 
         async function handleSendAuthEmail() {
             const email = get('userEmailInput').value;
-            if (!email || !email.includes('@')) {
-                return showMessage("Hata", "Lütfen geçerli bir e-posta adresi girin.");
-            }
-
+            if (!email || !email.includes('@')) return showMessage("Hata", "Geçerli e-posta girin.");
             let targetProject = "GENEL";
             if (pendingPath) {
                 const parts = pendingPath.split('/');
                 targetProject = (parts.length > 2) ? parts[2].toUpperCase() : "GENEL";
             }
-
-            const password = dynamicAuth[targetProject] || ADMIN_PASS;
-            const username = targetProject === "GENEL" ? ADMIN_USER : targetProject;
+            const creds = dynamicAuth[targetProject];
+            const username = creds ? creds.user : ADMIN_USER;
+            const password = creds ? creds.pass : ADMIN_PASS;
 
             toggleLoading(true, "E-posta gönderiliyor...");
             try {
-                const result = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-                    to_email: email,
-                    project_name: targetProject,
-                    username: username,
-                    password: password
-                });
-                
-                if(result.status === 200) {
-                    get('emailAuthModal').classList.add('hidden');
-                    showMessage("Başarılı", `${email} adresine "${targetProject}" projesi için giriş bilgileri gönderildi.`, "success");
-                } else {
-                    throw new Error("E-posta sunucusu yanıt vermedi.");
-                }
-            } catch (err) {
-                console.error("EmailJS Error:", err);
-                showMessage("Gönderim Hatası", "E-posta gönderilirken bir sorun oluştu. Lütfen API bilgilerini kontrol edin.");
-            } finally {
-                toggleLoading(false);
-            }
+                const result = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: email, project_name: targetProject, username: username, password: password });
+                if(result.status === 200) { get('emailAuthModal').classList.add('hidden'); get('emailAuthModal').classList.remove('flex'); showMessage("Başarılı", `Bilgiler gönderildi.`, "success"); }
+                else throw new Error("Hata");
+            } catch (err) { showMessage("Gönderim Hatası", "Teknik hata."); } finally { toggleLoading(false); }
         }
 
         function attachListeners() {
+            get('addNewProjectBtn').onclick = () => {
+                get('newProjectNameInput').value = "";
+                get('newProjectUserInput').value = "";
+                get('newProjectPassInput').value = "";
+                get('newProjectModal').classList.remove('hidden');
+                get('newProjectModal').classList.add('flex');
+                lucide.createIcons();
+            };
+
+            get('saveNewProjectBtn').onclick = async () => {
+                const name = get('newProjectNameInput').value.trim().toUpperCase();
+                const user = get('newProjectUserInput').value.trim();
+                const pass = get('newProjectPassInput').value.trim();
+                
+                if (name && user && pass) {
+                    toggleLoading(true, "Proje oluşturuluyor...");
+                    dynamicAuth[name] = { user, pass };
+                    await saveDynamicAuthToSupabase();
+                    activeProject = name;
+                    get('newProjectModal').classList.add('hidden');
+                    get('newProjectModal').classList.remove('flex');
+                    toggleLoading(false);
+                    openEditorForNewSop();
+                } else {
+                    alert("Lütfen tüm alanları doldurun.");
+                }
+            };
+
             get('requestAuthBtn').onclick = () => {
                 let target = "Sistem Genel";
-                if (pendingPath) {
-                    const parts = pendingPath.split('/');
-                    target = (parts.length > 2) ? parts[2] : "Sistem Genel";
-                }
+                if (pendingPath) { const parts = pendingPath.split('/'); target = (parts.length > 2) ? parts[2] : "Sistem Genel"; }
                 get('targetProjectName').innerText = target;
-                const modal = get('emailAuthModal');
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
+                get('emailAuthModal').classList.remove('hidden');
+                get('emailAuthModal').classList.add('flex');
             };
 
             get('sendEmailBtn').onclick = handleSendAuthEmail;
-
-            get('viewSopBtn').onclick = () => {
-                get('gatewayScreen').style.display = 'none';
-                if(pendingPath) showModeSelection(pendingPath);
-            };
-            get('editSopBtn').onclick = () => {
-                loginPurpose = 'system';
-                get('loginHeading').innerText = "Yönetici Erişimi";
-                get('loginSubheading').innerText = "Sisteme giriş yaparak tüm SOP'ları yönetin";
-                get('gatewayScreen').style.display = 'none';
-                get('loginScreen').style.display = 'flex';
-                get('backToGateway').classList.remove('hidden');
-            };
-            get('backToGateway').onclick = () => {
-                get('loginScreen').style.display = 'none';
-                if (loginPurpose === 'engineer_edit') get('modeSelectionScreen').style.display = 'flex';
-                else get('gatewayScreen').style.display = 'flex';
-            };
+            get('viewSopBtn').onclick = () => { get('gatewayScreen').style.display = 'none'; if(pendingPath) showModeSelection(pendingPath); };
+            get('editSopBtn').onclick = () => { loginPurpose = 'system'; get('loginHeading').innerText = "Yönetici Erişimi"; get('gatewayScreen').style.display = 'none'; get('loginScreen').style.display = 'flex'; get('backToGateway').classList.remove('hidden'); };
+            get('backToGateway').onclick = () => { get('loginScreen').style.display = 'none'; if (loginPurpose === 'engineer_edit') get('modeSelectionScreen').style.display = 'flex'; else get('gatewayScreen').style.display = 'flex'; };
+            
             get('loginForm').onsubmit = (e) => {
                 e.preventDefault();
-                const u = get('usernameInput').value.toUpperCase();
-                const p = get('passwordInput').value;
-                const isAdmin = (u === ADMIN_USER.toUpperCase() && p === ADMIN_PASS);
-                const isProjectAuth = (dynamicAuth[u] && dynamicAuth[u] === p);
+                const uInput = get('usernameInput').value;
+                const pInput = get('passwordInput').value;
+                const isAdmin = (uInput.toUpperCase() === ADMIN_USER.toUpperCase() && pInput === ADMIN_PASS);
+                
+                let isProjectAuth = false;
+                let matchedProj = null;
+                for(const proj in dynamicAuth) {
+                    if(dynamicAuth[proj].user === uInput && dynamicAuth[proj].pass === pInput) {
+                        isProjectAuth = true;
+                        matchedProj = proj;
+                        break;
+                    }
+                }
+
                 if (loginPurpose === 'engineer_edit') {
                     const parts = pendingPath.split('/');
-                    const requiredProject = (parts.length > 2) ? parts[2].toUpperCase() : null;
-                    if (isAdmin || (isProjectAuth && u === requiredProject)) {
-                        get('loginScreen').style.display = 'none';
-                        loginSuccess(isAdmin ? 'admin' : 'project', u);
+                    const req = (parts.length > 2) ? parts[2].toUpperCase() : null;
+                    if (isAdmin || (isProjectAuth && matchedProj === req)) { 
+                        get('loginScreen').style.display = 'none'; 
+                        loginSuccess(isAdmin ? 'admin' : 'project', matchedProj || uInput); 
                         loadSopData(pendingPath); 
-                    } else {
-                        get('loginError').innerText = "Bu proje için yetkiniz yok.";
-                        get('loginError').classList.remove('hidden');
                     }
-                } else {
-                    if (isAdmin) loginSuccess('admin', null);
-                    else if (isProjectAuth) loginSuccess('project', u);
-                    else { get('loginError').innerText = "Giriş başarısız."; get('loginError').classList.remove('hidden'); }
+                    else { get('loginError').innerText = "Yetkiniz yok."; get('loginError').classList.remove('hidden'); }
+                } else { 
+                    if (isAdmin) loginSuccess('admin', null); 
+                    else if (isProjectAuth) loginSuccess('project', matchedProj); 
+                    else { get('loginError').innerText = "Giriş başarısız."; get('loginError').classList.remove('hidden'); } 
                 }
             };
+
             get('sidebarToggle').onclick = () => get('sidebar').classList.toggle('collapsed');
             get('startNewSopBtn').onclick = openEditorForNewSop;
             get('cancelSopBtn').onclick = closeEditor;
@@ -680,104 +749,49 @@
             get('uploadArea').onclick = () => get('fileInput').click();
             get('logoUploadBox').onclick = () => get('logoInput').click();
             get('exportSupabaseBtn').onclick = handleSave;
-            [0, 1].forEach(i => {
-                get(`tab${i}`).onclick = () => {
-                    activeIdx = i;
-                    document.querySelectorAll('.tab-btn').forEach((b, idx) => b.classList.toggle('active', idx === i));
-                    renderAll();
-                };
-            });
+            [0, 1].forEach(i => { get(`tab${i}`).onclick = () => { activeIdx = i; document.querySelectorAll('.tab-btn').forEach((b, idx) => b.classList.toggle('active', idx === i)); renderAll(); }; });
             const tools = { toolRed:'red', toolBlue:'blue', toolGreen:'green', toolArrow:'arrow', toolOperator:'operator' };
-            Object.entries(tools).forEach(([id, m]) => {
-                get(id).onclick = () => {
-                    currentMode = m; if(['red','blue','green'].includes(m)) lastColor = m;
-                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                    get(id).classList.add('active');
-                };
-            });
+            Object.entries(tools).forEach(([id, m]) => { get(id).onclick = () => { currentMode = m; if(['red','blue','green'].includes(m)) lastColor = m; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); get(id).classList.add('active'); }; });
             get('addManualBtn').onclick = () => { points.push({ type: 'red', isManual: true, description: '', imgIdx: -1 }); renderAll(); };
             get('addWarningBtn').onclick = () => { warnings.push({ text: '' }); renderWarnings(); };
         }
 
-        function loginSuccess(role, project) {
-            currentUser = { role, project };
-            if (role === 'admin') localStorage.setItem('isEldor', 'true');
-            get('loginScreen').style.display = 'none';
-            get('gatewayScreen').style.display = 'none';
-            const m = get('mainApp');
-            m.classList.remove('hidden');
-            setTimeout(() => m.style.opacity = '1', 50);
-            if (role === 'admin') get('addNewProjectBtn').classList.remove('hidden');
-            if (role === 'project') selectProject(project);
-            fetchArchive();
-        }
-
+        function loginSuccess(role, project) { currentUser = { role, project }; if (role === 'admin') localStorage.setItem('isEldor', 'true'); get('loginScreen').style.display = 'none'; get('gatewayScreen').style.display = 'none'; const m = get('mainApp'); m.classList.remove('hidden'); setTimeout(() => m.style.opacity = '1', 50); if (role === 'admin') get('addNewProjectBtn').classList.remove('hidden'); if (role === 'project') selectProject(project); fetchArchive(); }
         function logout() { localStorage.removeItem('isEldor'); window.location.reload(); }
-
-        function showModeSelection(path) {
-            pendingPath = path;
-            get('modeSelectionScreen').style.display = 'flex';
-        }
-
-        function handleModeChoice(mode) {
-            get('modeSelectionScreen').style.display = 'none';
-            if (mode === 'operator') loadOperatorSop(pendingPath);
-            else {
-                loginPurpose = 'engineer_edit';
-                const parts = pendingPath.split('/');
-                const projName = (parts.length > 2) ? parts[2] : "SOP";
-                get('loginHeading').innerText = "Mühendis / Yetkili";
-                get('loginSubheading').innerText = `"${projName}" talimatını düzenlemek için yetkili girişi gereklidir.`;
-                get('loginError').classList.add('hidden');
-                get('backToGateway').classList.remove('hidden');
-                get('loginScreen').style.display = 'flex';
-            }
-        }
-
+        function showModeSelection(path) { pendingPath = path; get('modeSelectionScreen').style.display = 'flex'; }
+        function handleModeChoice(mode) { get('modeSelectionScreen').style.display = 'none'; if (mode === 'operator') loadOperatorSop(pendingPath); else { loginPurpose = 'engineer_edit'; get('loginHeading').innerText = "Mühendis"; get('loginError').classList.add('hidden'); get('backToGateway').classList.remove('hidden'); get('loginScreen').style.display = 'flex'; } }
+        
         async function fetchArchive() {
             try {
                 const { data: folders } = await supabaseClient.storage.from(BUCKET_NAME).list('public/data');
-                const list = get('archiveSidebarList');
-                if(!list) return;
+                const list = get('archiveSidebarList'); if(!list) return;
                 list.innerHTML = '';
-                const projectNames = new Set([...Object.keys(dynamicAuth), ...folders.map(f => f.name)]);
-                for (const projName of projectNames) {
+                const pNames = new Set([...Object.keys(dynamicAuth), ...folders.map(f => f.name)]);
+                for (const projName of pNames) {
                     if (currentUser.role !== 'admin' && projName !== currentUser.project) continue;
-                    const folderData = folders.find(f => f.name === projName);
+                    const fData = folders.find(f => f.name === projName);
                     const header = document.createElement('div');
                     header.className = `project-group-header ${activeProject === projName ? 'active' : ''}`;
                     header.innerHTML = `
                         <span class="truncate font-black">${projName}</span>
-                        <div class="flex items-center gap-1.5">
-                            <button onclick="event.stopPropagation(); selectProject('${projName}'); openEditorForNewSop();" class="p-1.5 hover:bg-blue-100 rounded-lg text-[#000080] transition-all hover:scale-110" title="Yeni SOP Ekle">
-                                <i data-lucide="plus" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="event.stopPropagation(); showCredentials('${projName}')" class="p-1.5 hover:bg-slate-200 rounded-lg text-slate-400 transition-colors" title="Şifreyi Gör">
-                                <i data-lucide="shield-ellipsis" class="w-4 h-4"></i>
-                            </button>
-                            <i data-lucide="chevron-down" class="chevron w-4 h-4"></i>
+                        <div class="flex items-center gap-1">
+                            <button onclick="event.stopPropagation(); selectProject('${projName}'); openEditorForNewSop();" class="p-1.5 hover:bg-blue-100 rounded-lg text-[#000080]"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                            <button onclick="event.stopPropagation(); showCredentials('${projName}')" class="p-1.5 hover:bg-slate-200 rounded-lg text-slate-400"><i data-lucide="shield-ellipsis" class="w-4 h-4"></i></button>
+                            <button onclick="event.stopPropagation(); deleteWholeProject('${projName}')" class="p-1.5 hover:bg-red-100 rounded-lg text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            <i data-lucide="chevron-down" class="chevron w-4 h-4 ml-1"></i>
                         </div>`;
                     const content = document.createElement('div');
                     content.className = `folder-content ${activeProject === projName ? '' : 'hidden'}`;
                     header.onclick = () => { selectProject(projName); content.classList.toggle('hidden'); header.classList.toggle('collapsed'); };
-                    if (folderData) {
+                    if (fData) {
                         const { data: files } = await supabaseClient.storage.from(BUCKET_NAME).list(`public/data/${projName}`);
                         (files || []).filter(f => f.name.endsWith('.json')).forEach(f => {
                             const path = `public/data/${projName}/${f.name}`;
-                            let cleanName = f.name;
-                            if (f.name.startsWith('SOP_')) {
-                                const parts = f.name.split('_');
-                                if (parts.length > 2) cleanName = parts.slice(2).join(' ').replace('.json', '');
-                            }
+                            let cleanName = f.name.replace('.json', '');
+                            if (f.name.startsWith('SOP_')) { const pts = f.name.split('_'); if (pts.length > 2) cleanName = pts.slice(2).join(' ').replace('.json', ''); }
                             const div = document.createElement('div');
-                            div.className = "p-3 hover:bg-slate-100 rounded-xl cursor-pointer text-[11px] font-bold flex items-center justify-between ml-3 mt-2 border border-transparent hover:border-slate-200 transition-all";
-                            div.innerHTML = `
-                                <span onclick="event.stopPropagation(); loadSopData('${path}')" class="truncate flex-grow mr-2 uppercase tracking-tight">${cleanName}</span>
-                                <div class="flex gap-2 items-center shrink-0">
-                                    <button onclick="event.stopPropagation(); showQr('${path}', '${cleanName}')" class="text-[#000080] p-1.5 hover:bg-blue-50 rounded-lg"><i data-lucide="qr-code" class="w-4 h-4"></i></button>
-                                    <button onclick="event.stopPropagation(); showModeSelection('${path}')" class="text-slate-600 p-1.5 hover:bg-slate-200 rounded-lg"><i data-lucide="eye" class="w-4 h-4"></i></button>
-                                    <button onclick="event.stopPropagation(); deleteSop('${path}')" class="text-red-500 p-1.5 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                </div>`;
+                            div.className = "p-3 hover:bg-slate-100 rounded-xl cursor-pointer text-[11px] font-bold flex items-center justify-between ml-3 mt-2 border border-transparent";
+                            div.innerHTML = `<span onclick="event.stopPropagation(); loadSopData('${path}')" class="truncate flex-grow mr-2 uppercase">${cleanName}</span><div class="flex gap-2 items-center"><button onclick="event.stopPropagation(); showQr('${path}', '${cleanName}')" class="text-[#000080] p-1.5 hover:bg-blue-50 rounded-lg"><i data-lucide="qr-code" class="w-4 h-4"></i></button><button onclick="event.stopPropagation(); deleteSop('${path}')" class="text-red-500 p-1.5 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`;
                             content.appendChild(div);
                         });
                     }
@@ -787,57 +801,53 @@
             } catch (e) { console.error(e); }
         }
 
+        async function deleteWholeProject(projName) {
+            showConfirm("Projeyi Sil", `"${projName}" projesini ve içindeki TÜM talimatları kalıcı olarak silmek istediğinizden emin misiniz?`, async () => {
+                toggleLoading(true, "Proje siliniyor...");
+                try {
+                    const { data: files } = await supabaseClient.storage.from(BUCKET_NAME).list(`public/data/${projName}`);
+                    if (files && files.length > 0) { const paths = files.map(f => `public/data/${projName}/${f.name}`); await supabaseClient.storage.from(BUCKET_NAME).remove(paths); }
+                    await supabaseClient.storage.from(BUCKET_NAME).remove([`public/data/${projName}`]);
+                    delete dynamicAuth[projName.toUpperCase()];
+                    await saveDynamicAuthToSupabase();
+                    await fetchArchive(); showMessage("Başarılı", `"${projName}" temizlendi.`, "success");
+                } catch (e) { showMessage("Hata", "Sorun oluştu."); } finally { toggleLoading(false); }
+            });
+        }
+
+        async function deleteSop(p) { 
+            showConfirm("Talimatı Sil", "Bu döküman silinsin mi?", async () => {
+                toggleLoading(true, "Siliniyor...");
+                try { await supabaseClient.storage.from(BUCKET_NAME).remove([p]); await fetchArchive(); } catch(e) { showMessage("Hata", "Silinemedi."); } finally { toggleLoading(false); }
+            });
+        }
+
         async function loadOperatorSop(path) {
-            toggleLoading(true, "Operatör görünümü...");
+            toggleLoading(true, "Yükleniyor...");
             try {
-                const cleanPath = path.replace(/^\/+/, '');
-                const { data, error } = await supabaseClient.storage.from(BUCKET_NAME).download(cleanPath);
-                if (error || !data) throw new Error("Dosya bulunamadı.");
+                const { data } = await supabaseClient.storage.from(BUCKET_NAME).download(path.replace(/^\/+/, ''));
                 const s = JSON.parse(await data.text());
                 get('opSopTitle').innerText = s.title; get('opSopSubtitle').innerText = s.subtitle;
-                const m = get('opMedia'); m.innerHTML = ''; 
-                const st = get('opStepsList'); st.innerHTML = '';
+                const m = get('opMedia'); m.innerHTML = ''; const st = get('opStepsList'); st.innerHTML = '';
                 if(s.logo) get('opLogoContainer').innerHTML = `<img src="${s.logo}" class="w-full h-full object-contain">`;
                 s.images.forEach((src, idx) => {
                     if(!src) return;
                     const div = document.createElement('div'); div.className = "relative bg-white rounded-[32px] overflow-hidden shadow-md border border-slate-200 mb-8";
                     const img = document.createElement('img'); img.src = src; img.className = "w-full"; div.appendChild(img);
                     let sc = 0;
-                    s.points.forEach(p => {
-                        if(p.type === 'red' || p.isManual) sc++;
-                        if(p.imgIdx === idx && !p.isManual) {
-                            const mk = document.createElement('div'); mk.className = p.type === 'operator' ? 'marker-operator' : `marker marker-${p.type}`;
-                            mk.style.left = p.px + '%'; mk.style.top = p.py + '%'; mk.innerHTML = p.type === 'operator' ? 'OPERATOR' : sc; div.appendChild(mk);
-                        }
-                    });
+                    s.points.forEach(p => { if(p.type === 'red' || p.isManual) sc++; if(p.imgIdx === idx && !p.isManual) { const mk = document.createElement('div'); mk.className = p.type === 'operator' ? 'marker-operator' : `marker marker-${p.type}`; mk.style.left = p.px + '%'; mk.style.top = p.py + '%'; mk.innerHTML = p.type === 'operator' ? 'OPERATOR' : sc; div.appendChild(mk); } });
                     m.appendChild(div);
                 });
-                const wArea = get('opWarningsArea');
-                if(s.warnings && s.warnings.length > 0) { 
-                    wArea.innerHTML = '<h3 class="text-red-700 font-black text-xs uppercase mb-4 tracking-widest flex items-center gap-2"><i data-lucide="alert-octagon" class="w-4 h-4"></i> KRİTİK GÜVENLİK UYARILARI</h3>' + s.warnings.map(w => `<p class="text-red-800 text-sm font-bold mb-2 leading-relaxed flex items-start gap-2"><span>•</span> ${w.text}</p>`).join('');
-                    wArea.classList.remove('hidden'); 
-                } else wArea.classList.add('hidden');
                 let sc2 = 0;
-                s.points.forEach(p => {
-                    if(p.type === 'red' || p.isManual) {
-                        sc2++;
-                        const card = document.createElement('div'); card.className = "step-card bg-white p-6 rounded-2xl flex items-center gap-6 shadow-sm border border-slate-100";
-                        card.innerHTML = `<div class="w-10 h-10 rounded-xl ${p.isManual ? 'bg-blue-600' : 'bg-red-600'} text-white flex items-center justify-center font-black shrink-0 shadow-lg">${sc2}</div><p class="text-base font-bold text-slate-700 flex-grow">${p.description}</p><div class="check-indicator"><i data-lucide="check" class="w-5 h-5"></i></div>`;
-                        card.onclick = () => card.classList.toggle('completed'); st.appendChild(card);
-                    }
-                });
-                get('operatorView').style.display = 'flex';
-                lucide.createIcons();
-            } catch(e) { showMessage("Veri Hatası", e.message); }
-            toggleLoading(false);
+                s.points.forEach(p => { if(p.type === 'red' || p.isManual) { sc2++; const card = document.createElement('div'); card.className = "step-card bg-white p-6 rounded-2xl flex items-center gap-6 shadow-sm border border-slate-100"; card.innerHTML = `<div class="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center font-black shrink-0 shadow-lg">${sc2}</div><p class="text-base font-bold text-slate-700 flex-grow">${p.description}</p><div class="check-indicator"><i data-lucide="check" class="w-5 h-5"></i></div>`; card.onclick = () => card.classList.toggle('completed'); st.appendChild(card); } });
+                get('operatorView').style.display = 'flex'; lucide.createIcons();
+            } catch(e) { showMessage("Hata", "Veri alınamadı."); } finally { toggleLoading(false); }
         }
 
         async function loadSopData(path) {
-            toggleLoading(true, "Veriler alınıyor...");
+            toggleLoading(true, "Yükleniyor...");
             try {
-                const cleanPath = path.replace(/^\/+/, '');
-                const { data, error } = await supabaseClient.storage.from(BUCKET_NAME).download(cleanPath);
-                if (error || !data) throw new Error("Dosya yüklenemedi.");
+                const { data } = await supabaseClient.storage.from(BUCKET_NAME).download(path.replace(/^\/+/, ''));
                 const s = JSON.parse(await data.text());
                 resetApp(); points = s.points; arrows = s.arrows; warnings = s.warnings;
                 get('sopTitleInput').value = s.title; get('sopSubtitleInput').value = s.subtitle;
@@ -845,93 +855,31 @@
                 if(s.logo) { const p = get('logoPreview'); p.src = s.logo; p.classList.remove('hidden'); get('logoPlaceholder').classList.add('hidden'); }
                 for(let i=0; i<2; i++) if(s.images[i]) { const img = new Image(); img.src = s.images[i]; await new Promise(r => img.onload = r); images[i] = img; }
                 renderAll(); renderWarnings();
-                get('projectEmptyState').classList.add('hidden'); 
-                get('sopEditor').classList.remove('hidden');
-            } catch(e) { showMessage("Yükleme Hatası", e.message); }
-            toggleLoading(false);
+                get('projectEmptyState').classList.add('hidden'); get('sopEditor').classList.remove('hidden');
+            } catch(e) { showMessage("Hata", "Yüklenemedi."); } finally { toggleLoading(false); }
         }
 
-        function selectProject(projId) {
-            activeProject = projId;
-            get('activeProjectTitle').innerText = projId;
-            get('startNewSopBtn').classList.remove('hidden');
-            const state = get('projectEmptyState');
-            state.classList.remove('hidden');
-            state.classList.add('flex');
-            get('sopEditor').classList.add('hidden');
-        }
-        function openEditorForNewSop() {
-            resetApp(); get('sopSubtitleInput').value = activeProject;
-            get('projectEmptyState').classList.add('hidden');
-            get('sopEditor').classList.remove('hidden');
-        }
+        function selectProject(projId) { activeProject = projId; get('activeProjectTitle').innerText = projId; get('startNewSopBtn').classList.remove('hidden'); get('projectEmptyState').classList.remove('hidden'); get('projectEmptyState').classList.add('flex'); get('sopEditor').classList.add('hidden'); }
+        function openEditorForNewSop() { resetApp(); get('sopSubtitleInput').value = activeProject; get('projectEmptyState').classList.add('hidden'); get('sopEditor').classList.remove('hidden'); }
         function closeEditor() { get('sopEditor').classList.add('hidden'); get('projectEmptyState').classList.remove('hidden'); }
-        function handleCanvasClick(e) {
-            if(!images[activeIdx]) return;
-            const rect = get('mainCanvas').getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * 100, y = ((e.clientY - rect.top) / rect.height) * 100;
-            if (currentMode === 'arrow') {
-                if (!tempArrowStart) tempArrowStart = { x, y };
-                else { arrows.push({ x1: tempArrowStart.x, y1: tempArrowStart.y, x2: x, y2: y, color: getHexColor(lastColor), imgIdx: activeIdx }); tempArrowStart = null; renderAll(); }
-            } else { points.push({ px: x, py: y, type: currentMode, description: '', imgIdx: activeIdx, isManual: false }); renderAll(); }
-        }
+        function handleCanvasClick(e) { if(!images[activeIdx]) return; const rect = get('mainCanvas').getBoundingClientRect(); const x = ((e.clientX - rect.left) / rect.width) * 100, y = ((e.clientY - rect.top) / rect.height) * 100; if (currentMode === 'arrow') { if (!tempArrowStart) tempArrowStart = { x, y }; else { arrows.push({ x1: tempArrowStart.x, y1: tempArrowStart.y, x2: x, y2: y, color: getHexColor(lastColor), imgIdx: activeIdx }); tempArrowStart = null; renderAll(); } } else { points.push({ px: x, py: y, type: currentMode, description: '', imgIdx: activeIdx, isManual: false }); renderAll(); } }
         function renderAll() {
             const img = images[activeIdx]; const canvas = get('mainCanvas');
-            if (img && ctx) {
-                get('uploadArea').classList.add('hidden'); get('editorArea').classList.remove('hidden');
-                canvas.width = 1200; canvas.height = img.height * (1200 / img.width);
-                ctx.drawImage(img, 0, 0, 1200, canvas.height);
-                arrows.filter(a => a.imgIdx === activeIdx).forEach(a => drawArrow(ctx, (a.x1/100)*1200, (a.y1/100)*canvas.height, (a.x2/100)*1200, (a.y2/100)*canvas.height, a.color));
-            } else { get('uploadArea').classList.remove('hidden'); get('editorArea').classList.add('hidden'); }
-            const overlay = get('markersOverlay'); overlay.innerHTML = '';
-            const table = get('tableBody'); table.innerHTML = '';
+            if (img && ctx) { get('uploadArea').classList.add('hidden'); get('editorArea').classList.remove('hidden'); canvas.width = 1200; canvas.height = img.height * (1200 / img.width); ctx.drawImage(img, 0, 0, 1200, canvas.height); arrows.filter(a => a.imgIdx === activeIdx).forEach(a => drawArrow(ctx, (a.x1/100)*1200, (a.y1/100)*canvas.height, (a.x2/100)*1200, (a.y2/100)*canvas.height, a.color)); } else { get('uploadArea').classList.remove('hidden'); get('editorArea').classList.add('hidden'); }
+            const overlay = get('markersOverlay'); overlay.innerHTML = ''; const table = get('tableBody'); table.innerHTML = '';
             let sc = 0;
-            points.forEach((p, i) => {
-                const isStep = p.type === 'red' || p.isManual; if(isStep) sc++;
-                if (p.imgIdx === activeIdx && !p.isManual) {
-                    const m = document.createElement('div'); m.className = p.type === 'operator' ? 'marker-operator' : `marker marker-${p.type}`;
-                    m.style.left = p.px + '%'; m.style.top = p.py + '%'; m.innerHTML = p.type === 'operator' ? 'OPERATOR' : sc;
-                    m.onclick = (e) => { e.stopPropagation(); points.splice(i, 1); renderAll(); }; overlay.appendChild(m);
-                }
-                if (isStep) {
-                    const row = document.createElement('div'); row.className = "flex items-center gap-3 p-4 bg-slate-50 rounded-2xl mb-3 group border border-slate-100 hover:border-slate-300 transition-colors";
-                    row.innerHTML = `<span class="w-6 h-6 rounded-lg ${p.isManual ? 'bg-blue-600' : 'bg-red-600'} text-white flex items-center justify-center text-[10px] font-black shrink-0 shadow-md">${sc}</span>
-                                    <input class="flex-grow bg-transparent text-[13px] outline-none font-bold text-slate-700" value="${p.description}" oninput="points[${i}].description=this.value" placeholder="Adım açıklamasını yazın...">
-                                    <button onclick="points.splice(${i},1); renderAll();" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
-                    table.appendChild(row);
-                }
-            });
+            points.forEach((p, i) => { const isStep = p.type === 'red' || p.isManual; if(isStep) sc++; if (p.imgIdx === activeIdx && !p.isManual) { const m = document.createElement('div'); m.className = p.type === 'operator' ? 'marker-operator' : `marker marker-${p.type}`; m.style.left = p.px + '%'; m.style.top = p.py + '%'; m.innerHTML = p.type === 'operator' ? 'OPERATOR' : sc; m.onclick = (e) => { e.stopPropagation(); points.splice(i, 1); renderAll(); }; overlay.appendChild(m); } if (isStep) { const row = document.createElement('div'); row.className = "flex items-center gap-3 p-4 bg-slate-50 rounded-2xl mb-3 group border border-slate-100"; row.innerHTML = `<span class="w-6 h-6 rounded-lg bg-red-600 text-white flex items-center justify-center text-[10px] font-black shrink-0 shadow-md">${sc}</span><input class="flex-grow bg-transparent text-[13px] outline-none font-bold text-slate-700" value="${p.description}" oninput="points[${i}].description=this.value" placeholder="Adım..."><button onclick="points.splice(${i},1); renderAll();" class="opacity-0 group-hover:opacity-100 text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`; table.appendChild(row); } });
             lucide.createIcons();
         }
         function getHexColor(c) { return c === 'blue' ? '#3b82f6' : c === 'green' ? '#22c55e' : '#ef4444'; }
-        function drawArrow(c, fx, fy, tx, ty, color) {
-            const headlen = 22; const angle = Math.atan2(ty - fy, tx - fx);
-            c.beginPath(); c.strokeStyle = color; c.lineWidth = 8; c.lineCap = "round"; c.moveTo(fx, fy); c.lineTo(tx, ty); c.stroke();
-            c.beginPath(); c.fillStyle = color; c.moveTo(tx, ty);
-            c.lineTo(tx - headlen * Math.cos(angle - Math.PI/6), ty - headlen * Math.sin(angle - Math.PI/6));
-            c.lineTo(tx - headlen * Math.cos(angle + Math.PI/6), ty - headlen * Math.sin(angle + Math.PI/6));
-            c.closePath(); c.fill();
-        }
+        function drawArrow(c, fx, fy, tx, ty, color) { const headlen = 22; const angle = Math.atan2(ty - fy, tx - fx); c.beginPath(); c.strokeStyle = color; c.lineWidth = 8; c.lineCap = "round"; c.moveTo(fx, fy); c.lineTo(tx, ty); c.stroke(); c.beginPath(); c.fillStyle = color; c.moveTo(tx, ty); c.lineTo(tx - headlen * Math.cos(angle - Math.PI/6), ty - headlen * Math.sin(angle - Math.PI/6)); c.lineTo(tx - headlen * Math.cos(angle + Math.PI/6), ty - headlen * Math.sin(angle + Math.PI/6)); c.closePath(); c.fill(); }
         function handleFileChange(e) { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = (ev) => { const img = new Image(); img.onload = () => { images[activeIdx] = img; renderAll(); }; img.src = ev.target.result; }; r.readAsDataURL(f); }
         function handleLogoChange(e) { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = (ev) => { const p = get('logoPreview'); p.src = ev.target.result; p.classList.remove('hidden'); get('logoPlaceholder').classList.add('hidden'); }; r.readAsDataURL(f); }
-        function toggleLoading(s, t) { const l = get('loading'); if(l) { get('loadingText').innerText = t; l.classList.toggle('active', s); } }
-        async function handleSave() {
-            const title = get('sopTitleInput').value; if(!title) return alert("Lütfen döküman başlığı girin.");
-            toggleLoading(true, "Döküman sunucuya kaydediliyor...");
-            try {
-                const filename = `SOP_${Date.now()}_${title.toUpperCase().replace(/[^A-Z0-9]/g, '_')}.json`;
-                const path = `public/data/${activeProject}/${filename}`;
-                const state = { title, subtitle: activeProject, points, arrows, warnings, logo: get('logoPreview').src || null, images: images.map(img => img ? img.src : null) };
-                await supabaseClient.storage.from(BUCKET_NAME).upload(path, new Blob([JSON.stringify(state)], { type: 'application/json' }), { upsert: true });
-                toggleLoading(false); 
-                showQr(path, title); 
-                fetchArchive();
-            } catch (e) { showMessage("Kaydetme Hatası", e.message); toggleLoading(false); }
-        }
+        function toggleLoading(s, t) { const l = get('loading'); if(l) { get('loadingText').innerText = t; if(s) l.classList.add('active'); else l.classList.remove('active'); } }
+        async function handleSave() { const title = get('sopTitleInput').value; if(!title) return alert("Başlık girin."); toggleLoading(true, "Kaydediliyor..."); try { const filename = `SOP_${Date.now()}_${title.toUpperCase().replace(/[^A-Z0-9]/g, '_')}.json`; const path = `public/data/${activeProject}/${filename}`; const state = { title, subtitle: activeProject, points, arrows, warnings, logo: get('logoPreview').src || null, images: images.map(img => img ? img.src : null) }; await supabaseClient.storage.from(BUCKET_NAME).upload(path, new Blob([JSON.stringify(state)], { type: 'application/json' }), { upsert: true }); toggleLoading(false); showQr(path, title); fetchArchive(); } catch (e) { showMessage("Kaydetme Hatası", e.message); toggleLoading(false); } }
         function resetApp() { images = [null, null]; points = []; arrows = []; warnings = []; get('sopTitleInput').value = ''; get('logoPreview').classList.add('hidden'); get('logoPlaceholder').classList.remove('hidden'); renderAll(); renderWarnings(); }
-        function renderWarnings() { const b = get('warningsContainer'); b.innerHTML = ''; warnings.forEach((w, i) => { const d = document.createElement('div'); d.className = "flex gap-3 bg-red-50 p-4 rounded-2xl border border-red-100 shadow-sm"; d.innerHTML = `<textarea class="flex-grow bg-transparent text-[11px] text-red-800 font-bold outline-none resize-none" rows="2" placeholder="Uyarı metni..." oninput="warnings[${i}].text=this.value">${w.text}</textarea><button onclick="warnings.splice(${i},1); renderWarnings();" class="text-red-300 hover:text-red-500 font-black text-xl">×</button>`; b.appendChild(d); }); }
+        function renderWarnings() { const b = get('warningsContainer'); b.innerHTML = ''; warnings.forEach((w, i) => { const d = document.createElement('div'); d.className = "flex gap-3 bg-red-50 p-4 rounded-2xl border border-red-100 shadow-sm"; d.innerHTML = `<textarea class="flex-grow bg-transparent text-[11px] text-red-800 font-bold outline-none resize-none" rows="2" placeholder="Uyarı..." oninput="warnings[${i}].text=this.value">${w.text}</textarea><button onclick="warnings.splice(${i},1); renderWarnings();" class="text-red-300 hover:text-red-500 font-black text-xl">×</button>`; b.appendChild(d); }); }
         function exitOperatorView() { get('operatorView').style.display = 'none'; }
-        async function deleteSop(p) { if(confirm("Bu dökümanı kalıcı olarak silmek istediğinizden emin misiniz?")) { await supabaseClient.storage.from(BUCKET_NAME).remove([p]); fetchArchive(); } }
     </script>
 </body>
 </html>
